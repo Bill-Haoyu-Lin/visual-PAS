@@ -1,0 +1,57 @@
+import cv2
+
+face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+eye_cascade = cv2.CascadeClassifier('haarcascade_eye_tree_eyeglasses.xml')
+chart = cv2.imread('abc.png')
+cap = cv2.VideoCapture(0)
+i = 0
+mov_x = 0
+mov_y = 0
+moved_x = 320
+moved_y = 240
+mov_x = 0
+mov_y = 0
+while cap.isOpened():
+    _, img = cap.read()
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+    happy = cv2.imread('happy.jfif')
+    for (x, y, w, h) in faces:
+        cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 4)
+        cen_x = x+1/2*w
+        cen_y = y+1/2*h
+        if i ==0 :
+            cal_x = cen_x
+            cal_y = cen_y
+        moved_x = moved_x + int(mov_x)
+        moved_y = moved_y + int(mov_y)
+        mov_x = 0
+        mov_y = 0
+        if moved_x-20 < 0 or moved_y-20 <0 or moved_x +20 >640 or moved_y +20 >480:
+            moved_x = 320
+            moved_y = 240
+        img = cv2.circle(img, (moved_x,moved_y), 20, (0, 255, 0), -1)
+        if abs(cal_y-cen_y) > 15:
+            if cal_y>cen_y:
+                mov_y = -6
+            else:
+                mov_y = 6
+        elif abs(cal_x-cen_x)> 20:
+            if cal_x>cen_x:
+                mov_x = -6
+            else:
+                mov_x = 6
+        img = cv2.circle(img,(int(cen_x),int(cen_y)),2,(0,255,0),-1)
+        roi_gray = gray[y:y + h, x:x + w]
+        roi_color = img[y:y + h, x:x + w]
+        eyes = eye_cascade.detectMultiScale(roi_gray)
+        for (ex,ey,ew,eh) in eyes:
+            cv2.rectangle(roi_color, (ex,ey),(ex+ew,ey+eh),(0, 255, 0), 5)
+    img= cv2.flip(img, 1)
+    chart =cv2.resize(chart,(640,480))
+    dst = cv2.addWeighted(chart,0.7,img,0.3,0)
+    cv2.imshow('img', dst)
+    i = i + 1
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+cap.release()
